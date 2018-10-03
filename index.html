@@ -1,0 +1,51 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>Atlas Multiplayer Games Workshop -- Part 1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+
+    <!-- Scripts go here... -->
+    <script src="./src/constants.js"></script>
+    <script src="./src/Snek.js"></script>
+    <script src="./src/GameManager.js"></script>
+    <script src="./src/index.js"></script>
+
+    <!-- Any CSS you need goes here... -->
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      .game-elements {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      #game-over {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-weight: bold;
+        font-size: 2rem;
+      }
+
+      canvas {
+        background-color: beige;
+      }
+    </style>
+
+  </head>
+
+  <body>
+    <div class="game-elements">
+      <canvas id="game-canvas" width="760" height="500"></canvas>
+      <div id="game-over"></div>
+      <button id="play">PLAY</button>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "atlas-multiplayer-game-workshop-part-1",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smithki/atlas-multiplayer-game-workshop-part-1.git"
+  },
+  "author": "Ian Smith <smithki707@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/smithki/atlas-multiplayer-game-workshop-part-1/issues"
+  },
+  "homepage": "https://github.com/smithki/atlas-multiplayer-game-workshop-part-1#readme"
+}
