@@ -44,12 +44,12 @@ class GameManager {
       new Snek({ x: 50, y: 50 }, DIRECTIONS.DOWN, this.canvas.width, this.canvas.height, 'red'),
     );
     this.snekStepCounter = 0;
-    
+
     this.munchies = [];
     this.munchieCounter = 0;
 
     // Hide html
-    
+
   }
 
   /**
@@ -59,7 +59,7 @@ class GameManager {
   update(currentTime) {
     const deltaTime = currentTime - this.prevTime;
     this.prevTime = currentTime;
-    
+
     // Check game over state
     if (!this.isGameOver && this.sneks.filter(s => !s.isDead).length <= 1) {
       this.isGameOver = true;
