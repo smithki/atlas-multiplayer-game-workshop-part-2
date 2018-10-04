@@ -1,10 +1,10 @@
 {
-  "name": "atlas-multiplayer-game-workshop-part-1",
+  "name": "atlas-multiplayer-game-workshop-part-2",
   "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node ./server/GameManager.js",
+    "start": "node ./server/index.js",
     "localtunnel": "lt --port 3000",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,5 +17,10 @@
   "bugs": {
     "url": "https://github.com/smithki/atlas-multiplayer-game-workshop-part-1/issues"
   },
-  "homepage": "https://github.com/smithki/atlas-multiplayer-game-workshop-part-1#readme"
+  "homepage": "https://github.com/smithki/atlas-multiplayer-game-workshop-part-1#readme",
+  "dependencies": {
+    "express": "~4.16.3",
+    "localtunnel": "~1.9.1",
+    "socket.io": "~2.1.1"
+  }
 }
