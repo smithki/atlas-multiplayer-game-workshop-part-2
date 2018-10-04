@@ -1,4 +1,6 @@
-class Snek {
+const { DIRECTIONS, KEYS } = require('./constants');
+
+export default class Snek {
   constructor(initialPosition, initialDirection, worldWidth, worldHeight, color) {
     this.size = 20;
     this.sizeOffset = this.size / 2;

@@ -1,5 +1,8 @@
-class GameManager {
-  constructor() {
+const { DIRECTIONS, KEYS } = require('./constants');
+const Snek = require('./Snek');
+
+export default class GameManager {
+  constructor(io) {
     // Initialize canvas and drawing context.
     this.canvas = document.getElementById('game-canvas')
     this.context = this.canvas.getContext('2d');
@@ -17,6 +20,9 @@ class GameManager {
     this.munchies = [];
     this.munchieWindow = 2000;
     this.munchieCounter = 0;
+
+    // Socket.io stuff
+    this.io = io;
   }
 
   /**
@@ -30,8 +36,28 @@ class GameManager {
     window.onkeydown = this.keydown.bind(this);
     document.querySelector('#play').onclick = this.reset.bind(this);
 
-    // Starts rendering the game.
-    this.update(0);
+    // On socket connection
+    io.on('connection', socket => {
+      // When a client requests an update, send current game state
+      socket.on('update', ack => {
+        ack();
+      });
+
+      // Save a new player into the game state
+      socket.on('newPlayer', payload => {
+        gameState.sneks[socket.id] = payload;
+      });
+
+      // Remove a player when they lose
+      socket.on('removePlayer', () => {
+        delete gameState.sneks[socket.id];
+      });
+
+      // When a state mutation is received from the client, update accordingly in the game manager.
+      socket.on('mutation', payload => {
+        gameState.sneks[socket.id] = Object.assign({}, gameState.sneks[socket.id], payload);
+      });
+    });
   }
 
   reset() {
