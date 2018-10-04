@@ -17,6 +17,9 @@ class GameManager {
     this.munchies = [];
     this.munchieWindow = 2000;
     this.munchieCounter = 0;
+
+    // Socket.io stuff
+    this.socket = io();
   }
 
   /**
@@ -26,9 +29,11 @@ class GameManager {
     // Create our player sneks!
     this.reset();
 
+    this.socket.emit('newPlayer', [{ x: 10, y: 10 }, DIRECTIONS.RIGHT, this.canvas.width, this.canvas.height, 'blue']);
+
     // Initialize event stuff
-    window.onkeydown = this.keydown.bind(this);
-    document.querySelector('#play').onclick = this.reset.bind(this);
+    // window.onkeydown = this.keydown.bind(this);
+    // document.querySelector('#play').onclick = this.reset.bind(this);
 
     // Starts rendering the game.
     this.update(0);
@@ -130,12 +135,6 @@ class GameManager {
 
     if (e.keyCode === KEYS.S && this.sneks[1].direction !== DIRECTIONS.UP) {
       this.sneks[1].changeDirection(DIRECTIONS.DOWN);
-    }
-
-    // Other keystrokes
-
-    if (e.keyCode === KEYS.SPACE) {
-      this.sneks[0].addSegment();
     }
   }
 
