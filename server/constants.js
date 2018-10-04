@@ -21,3 +21,8 @@ const DIRECTIONS = {
   RIGHT: 'RIGHT',
   DOWN: 'DOWN',
 }
+
+module.exports = {
+  DIRECTIONS: DIRECTIONS,
+  KEYS: KEYS,
+}

@@ -1,11 +1,11 @@
 const { DIRECTIONS, KEYS } = require('./constants');
 const Snek = require('./Snek');
 
-export default class GameManager {
+module.exports = class GameManager {
   constructor(io) {
     // Initialize canvas and drawing context.
-    this.canvas = document.getElementById('game-canvas')
-    this.context = this.canvas.getContext('2d');
+    // this.canvas = document.getElementById('game-canvas')
+    // this.context = this.canvas.getContext('2d');
     this.prevTime = 0;
 
     this.isGameOver = false;
@@ -21,6 +21,9 @@ export default class GameManager {
     this.munchieWindow = 2000;
     this.munchieCounter = 0;
 
+    this.updateBuffer = 0;
+    this.updateBufferMax = 50;
+
     // Socket.io stuff
     this.io = io;
   }
@@ -30,67 +33,58 @@ export default class GameManager {
    */
   init() {
     // Create our player sneks!
-    this.reset();
-
-    // Initialize event stuff
-    window.onkeydown = this.keydown.bind(this);
-    document.querySelector('#play').onclick = this.reset.bind(this);
 
     // On socket connection
-    io.on('connection', socket => {
-      // When a client requests an update, send current game state
-      socket.on('update', ack => {
-        ack();
-      });
-
+    this.io.on('connection', socket => {
       // Save a new player into the game state
-      socket.on('newPlayer', payload => {
-        gameState.sneks[socket.id] = payload;
+      socket.on('newPlayer', () => {
+        const newSnek = new Snek(
+          socket.id,
+          { x: 10, y: 10 },
+          DIRECTIONS.RIGHT,
+          37,
+          24
+        );
+        this.sneks.push(newSnek);
       });
 
       // Remove a player when they lose
       socket.on('removePlayer', () => {
-        delete gameState.sneks[socket.id];
+        // maybe we should send an update that says you died
+        // delete gameState.sneks[socket.id];
       });
 
-      // When a state mutation is received from the client, update accordingly in the game manager.
-      socket.on('mutation', payload => {
-        gameState.sneks[socket.id] = Object.assign({}, gameState.sneks[socket.id], payload);
+      socket.on('playerInput', direction => {
+        const properSnek = this.sneks.find(s => s.socketId = socket.id);
+        if (properSnek) {
+          this.processInput(properSnek, direction);
+        }
+      });
+
+      socket.on('disconnect', () => {
+        this.sneks = this.sneks.filter(s => s.socketId !== socket.id);
       });
     });
+
+    setImmediate(this.update.bind(this));
   }
 
-  reset() {
-    this.prevTime = 0;
-    this.isGameOver = false;
-
-    this.sneks = [];
-    this.sneks.push(
-      new Snek({ x: 10, y: 10 }, DIRECTIONS.RIGHT, this.canvas.width, this.canvas.height, 'blue'),
-      new Snek({ x: 50, y: 50 }, DIRECTIONS.DOWN, this.canvas.width, this.canvas.height, 'red'),
-    );
-    this.snekStepCounter = 0;
-
-    this.munchies = [];
-    this.munchieCounter = 0;
-
-    // Hide html
-
+  broadcast() {
+    const updateState = {
+      sneks: this.sneks.map(s => s.serialize()),
+      munchies: this.munchies,
+    };
+    console.log(this.sneks.map(s => s.socketId));
+    this.io.sockets.emit('update', updateState);
   }
 
   /**
    *
    * @param {*} currentTime
    */
-  update(currentTime) {
-    const deltaTime = currentTime - this.prevTime;
-    this.prevTime = currentTime;
-
-    // Check game over state
-    if (!this.isGameOver && this.sneks.filter(s => !s.isDead).length <= 1) {
-      this.isGameOver = true;
-      this.winnerIndex = this.sneks.findIndex(s => !s.isDead);
-    }
+  update() {
+    const deltaTime = Date.now() - this.prevTime;
+    this.prevTime = Date.now();
 
     if (!this.isGameOver) {
       this.snekStepCounter += deltaTime;
@@ -104,74 +98,46 @@ export default class GameManager {
       }
 
       this.munchieCounter += deltaTime;
-      if (this.munchies.length < 10 && this.munchieCounter >= this.munchieWindow) {
+      if (this.munchies.length < 20 && this.munchieCounter >= this.munchieWindow) {
         this.spawnMunchie();
         this.munchieCounter = 0;
       }
     }
 
+    this.updateBuffer += deltaTime;
     // Update all children with delta time (if necessary)
-    this.draw();
-    requestAnimationFrame(this.update.bind(this));
+    if (this.updateBuffer >= this.updateBufferMax) {
+      this.broadcast();
+      this.updateBuffer = 0;
+    }
+    setImmediate(this.update.bind(this));
   }
 
-  spawnMunchie() {
-    let munchX = (Math.round(Math.random() * 37) * 20) + 10;
-    let munchY = (Math.round(Math.random() * 24) * 20) + 10;
-
-    this.munchies.push({ x: munchX, y: munchY });
-  }
-
-  keydown(e) {
-    // ask q about turning restrictions
-    // Player one
-    if (e.keyCode === KEYS.LEFT && this.sneks[0].direction !== DIRECTIONS.RIGHT) {
-      this.sneks[0].changeDirection(DIRECTIONS.LEFT);
+  processInput(snek, direction) {
+    if (direction === DIRECTIONS.LEFT && snek.direction !== DIRECTIONS.RIGHT) {
+      snek.changeDirection(DIRECTIONS.LEFT);
     }
 
-    if (e.keyCode === KEYS.UP && this.sneks[0].direction !== DIRECTIONS.DOWN) {
-      this.sneks[0].changeDirection(DIRECTIONS.UP);
+    if (direction === DIRECTIONS.UP && snek.direction !== DIRECTIONS.DOWN) {
+      snek.changeDirection(DIRECTIONS.UP);
     }
 
-    if (e.keyCode === KEYS.RIGHT && this.sneks[0].direction !== DIRECTIONS.LEFT) {
-      this.sneks[0].changeDirection(DIRECTIONS.RIGHT);
+    if (direction === DIRECTIONS.RIGHT && snek.direction !== DIRECTIONS.LEFT) {
+      snek.changeDirection(DIRECTIONS.RIGHT);
     }
 
-    if (e.keyCode === KEYS.DOWN && this.sneks[0].direction !== DIRECTIONS.UP) {
-      this.sneks[0].changeDirection(DIRECTIONS.DOWN);
-    }
-
-    // Player two
-    if (e.keyCode === KEYS.A && this.sneks[1].direction !== DIRECTIONS.RIGHT) {
-      this.sneks[1].changeDirection(DIRECTIONS.LEFT);
-    }
-
-    if (e.keyCode === KEYS.W && this.sneks[1].direction !== DIRECTIONS.DOWN) {
-      this.sneks[1].changeDirection(DIRECTIONS.UP);
-    }
-
-    if (e.keyCode === KEYS.D && this.sneks[1].direction !== DIRECTIONS.LEFT) {
-      this.sneks[1].changeDirection(DIRECTIONS.RIGHT);
-    }
-
-    if (e.keyCode === KEYS.S && this.sneks[1].direction !== DIRECTIONS.UP) {
-      this.sneks[1].changeDirection(DIRECTIONS.DOWN);
-    }
-
-    // Other keystrokes
-
-    if (e.keyCode === KEYS.SPACE) {
-      this.sneks[0].addSegment();
+    if (direction === DIRECTIONS.DOWN && snek.direction !== DIRECTIONS.UP) {
+      snek.changeDirection(DIRECTIONS.DOWN);
     }
   }
 
-  checkCollisions(snek, index) {
+  checkCollisions(snek) {
     const headPosition = snek.segmentPositions[0];
 
     // Snek collisions
-    this.sneks.forEach((otherSnek, otherIndex) => {
+    this.sneks.forEach((otherSnek) => {
       // don't collide with ourself
-      if (index !== otherIndex) {
+      if (snek.socketId !== otherSnek.socketId) {
         otherSnek.segmentPositions.forEach(position => {
           if (headPosition.x === position.x && headPosition.y === position.y) {
             snek.isDead = true;
@@ -179,6 +145,7 @@ export default class GameManager {
         });
       }
     });
+    this.sneks = this.sneks.filter(s => !s.isDead);
 
     // Munchie collisions
     let collidedMunchie = -1;
@@ -194,28 +161,10 @@ export default class GameManager {
     }
   }
 
-  /**
-   *
-   *
-   * @memberof GameManager
-   */
-  draw() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  spawnMunchie() {
+    let munchX = (Math.round(Math.random() * 37));
+    let munchY = (Math.round(Math.random() * 24));
 
-    this.sneks.forEach(snek => {
-      snek.draw(this.context);
-    });
-
-    if (this.isGameOver) {
-      const gameOverDiv = document.getElementById('game-over');
-      gameOverDiv.innerHTML = 'Game over! Player ' + this.sneks[this.winnerIndex].color + ' wins!';
-    }
-
-    this.munchies.forEach(this.drawMunchie.bind(this));
-  }
-
-  drawMunchie(position) {
-    this.context.fillStyle = 'black';
-    this.context.fillRect(position.x - 5, position.y - 5, 10, 10);
+    this.munchies.push({ x: munchX, y: munchY });
   }
 }

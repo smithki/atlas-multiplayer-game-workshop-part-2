@@ -2,15 +2,12 @@ const express = require('express');
 const http = require('http');
 const SocketIO = require('socket.io');
 const path = require('path');
-const GameManager = require('GameManager');
+const GameManager = require('./GameManager');
 
 // Create our server application
 const app = express();
 const server = http.Server(app);
 const io = SocketIO(server);
-const game = new GameManager(io);
-
-game.init();
 
 // --- Set up express endpoints --- //
 
@@ -28,3 +25,6 @@ app.get('*', (req, res) => {
 server.listen(3000, () => {
   console.log('Server listening on http://localhost:3000/');
 });
+
+const game = new GameManager(io);
+game.init();

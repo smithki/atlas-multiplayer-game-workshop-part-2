@@ -1,14 +1,24 @@
 const { DIRECTIONS, KEYS } = require('./constants');
 
-export default class Snek {
-  constructor(initialPosition, initialDirection, worldWidth, worldHeight, color) {
+function getRandomColor() {
+  var letters = '0123456789ABCDEF';
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+module.exports = class Snek {
+  constructor(socketId, initialPosition, initialDirection, worldWidth, worldHeight) {
     this.size = 20;
     this.sizeOffset = this.size / 2;
     this.segmentPositions = [initialPosition, initialPosition];
     this.direction = initialDirection;
     this.worldWidth = worldWidth;
     this.worldHeight = worldHeight;
-    this.color = color;
+    this.color = getRandomColor();
+    this.socketId = socketId;
     this.isDead = false;
   }
 
@@ -19,23 +29,23 @@ export default class Snek {
         let newY = position.y;
 
         if (this.direction === DIRECTIONS.LEFT && this.direction !== DIRECTIONS.RIGHT) {
-          newX = position.x - this.size;
-          if (newX < 0) newX = this.worldWidth - this.size / 2;
+          newX = position.x - 1;
+          if (newX < 0) newX = this.worldWidth;
         }
 
         if (this.direction === DIRECTIONS.UP) {
-          newY = position.y - this.size;
-          if (newY < 0) newY = this.worldHeight - this.size / 2;
+          newY = position.y - 1;
+          if (newY < 0) newY = this.worldHeight;
         }
 
         if (this.direction === DIRECTIONS.RIGHT) {
-          newX = position.x + this.size;
-          if (newX > this.worldWidth) newX = 0 + this.size / 2;
+          newX = position.x + 1;
+          if (newX > this.worldWidth) newX = 0;
         }
 
         if (this.direction === DIRECTIONS.DOWN) {
-          newY = position.y + this.size;
-          if (newY > this.worldHeight) newY = 0 + this.size / 2;
+          newY = position.y + 1;
+          if (newY > this.worldHeight) newY = 0;
         }
 
         return { x: newX, y: newY };
@@ -43,17 +53,6 @@ export default class Snek {
 
       return this.segmentPositions[index - 1];
     });
-  }
-
-  draw(context) {
-    this.segmentPositions.forEach(position => {
-      this.drawSegment(context, position);
-    });
-  }
-
-  drawSegment(context, position) {
-    context.fillStyle = this.color;
-    context.fillRect(position.x - this.sizeOffset, position.y - this.sizeOffset, this.size, this.size);
   }
 
   changeDirection(newDirection) {
@@ -68,5 +67,12 @@ export default class Snek {
       x: tailSegment.x,
       y: tailSegment.y,
     });
+  }
+
+  serialize() {
+    return {
+      color: this.color,
+      segments: this.segmentPositions,
+    }
   }
 }
