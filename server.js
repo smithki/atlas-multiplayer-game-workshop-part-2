@@ -46,7 +46,7 @@ io.on('connection', socket => {
 
   // When a state mutation is received from the client, update accordingly in the game manager.
   socket.on('mutation', payload => {
-    game.setState(socket.id, payload);
+    gameState.sneks[socket.id] = Object.assign({}, gameState.sneks[socket.id], payload);
   });
 
 });
