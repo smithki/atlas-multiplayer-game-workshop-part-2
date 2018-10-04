@@ -74,7 +74,7 @@ module.exports = class GameManager {
       sneks: this.sneks.map(s => s.serialize()),
       munchies: this.munchies,
     };
-    console.log(this.sneks.map(s => s.socketId));
+    // console.log(this.sneks.map(s => s.socketId));
     this.io.sockets.emit('update', updateState);
   }
 
