@@ -55,7 +55,7 @@ module.exports = class GameManager {
       });
 
       socket.on('playerInput', direction => {
-        const properSnek = this.sneks.find(s => s.socketId = socket.id);
+        const properSnek = this.sneks.find(s => s.socketId === socket.id);
         if (properSnek) {
           this.processInput(properSnek, direction);
         }
